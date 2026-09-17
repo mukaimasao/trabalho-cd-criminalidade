@@ -16,12 +16,18 @@ nas mesorregiões do IBGE, com taxa por 100 mil habitantes.
 ├── src/
 │   ├── carga.py      # baixa os microdados de ocorrências da SSP-RS
 │   ├── ibge.py       # baixa população (Censo 2022) e mesorregiões do IBGE
-│   └── limpeza.py    # limpa, classifica em macrocategorias e agrega por município
+│   ├── limpeza.py    # limpa, classifica em macrocategorias e agrega por município
+│   ├── figuras_extra.py     # figuras F9-F11, de apoio ao seminário
+│   └── tabelas_relatorio.py # tabelas 1 e 2 do relatório, a partir de data/processed/
 ├── notebooks/
 │   └── analise_criminalidade.ipynb   # EDA, figuras e testes de hipótese
-├── figuras/          # figuras geradas (F1–F5), PNG e PDF
+├── figuras/          # figuras geradas (F1–F11), PNG e PDF
 ├── relatorio/
-│   └── relatorio.tex # relatório técnico (LaTeX)
+│   ├── relatorio.tex      # relatório técnico (LaTeX)
+│   ├── tabelas_geradas.tex # gerado por src/tabelas_relatorio.py
+│   └── MIGRACAO.md        # passo a passo para o template Springer (Overleaf)
+├── apresentacao/
+│   └── apresentacao.md   # roteiro do seminário (tópicos, falas e figuras)
 ├── data/
 │   ├── raw/          # microdados brutos (não versionado — reproduzir com carga.py)
 │   ├── interim/      # ocorrências limpas (não versionado)
@@ -50,6 +56,13 @@ python src/limpeza.py
 jupyter lab notebooks/analise_criminalidade.ipynb
 # ou, sem interface:
 jupyter nbconvert --to notebook --execute --inplace notebooks/analise_criminalidade.ipynb
+
+# 6. Figuras extras do seminário (dispensa os passos 2-4: lê só data/processed/)
+python src/figuras_extra.py
+
+# 7. Relatório (as tabelas saem de data/processed/, então não dependem do parquet)
+python src/tabelas_relatorio.py
+cd relatorio && pdflatex relatorio.tex && pdflatex relatorio.tex
 ```
 
 ## Fontes de dados

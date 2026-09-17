@@ -1,8 +1,4 @@
-"""Paleta e estilo dos graficos do trabalho.
-
-Cores validadas para daltonismo e para contraste em fundo claro (a saida final
-e impressa no relatorio).
-"""
+"""Paleta e estilo dos graficos do trabalho."""
 
 from __future__ import annotations
 
@@ -35,8 +31,8 @@ SERIES = [
     "#e34948",  # 8 vermelho
 ]
 
-# Em dispersao todos os pares de cor competem entre si; so os 3 primeiros slots
-# passam no teste de daltonismo nessa condicao. Acima disso, variar o marcador.
+# Em dispersao so os 3 primeiros passam no teste de daltonismo; acima disso,
+# variar o marcador.
 SERIES_DISPERSAO = SERIES[:3]
 MARCADORES = ["o", "s", "^", "D", "v", "P"]
 
@@ -132,7 +128,7 @@ def titular_figura(fig, titulo: str, subtitulo: str | None = None,
                    topo: float = 0.90) -> None:
     """Titulo e subtitulo para figuras com varios paineis.
 
-    Nao usa suptitle: com dois textos na mesma faixa eles se sobrepoem.
+    Nao usa suptitle porque os dois textos se sobrepoem.
     """
     fig.text(0.005, 0.985, titulo, ha="left", va="top", fontsize=11,
              fontweight="bold", color=TINTA["primaria"])
@@ -144,7 +140,7 @@ def titular_figura(fig, titulo: str, subtitulo: str | None = None,
 
 def rotular_barras(ax, formato: str = "{:.0f}", horizontal: bool = False,
                    deslocamento: int = 4) -> None:
-    """Escreve o valor na ponta da barra e dispensa o eixo correspondente."""
+    """Escreve o valor na ponta da barra e remove o eixo correspondente."""
     for cont in ax.containers:
         ax.bar_label(cont, fmt=formato, padding=deslocamento, fontsize=8,
                      color=TINTA["secundaria"])
@@ -159,7 +155,7 @@ def limpar_grade(ax) -> None:
 
 
 def salvar(fig, nome: str) -> Path:
-    """Salva PNG para os slides e PDF vetorial para o relatorio."""
+    """Salva PNG e PDF."""
     FIGURAS.mkdir(parents=True, exist_ok=True)
     caminho = FIGURAS / f"{nome}.png"
     fig.savefig(caminho)

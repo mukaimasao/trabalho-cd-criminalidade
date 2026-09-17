@@ -1,16 +1,8 @@
-"""Baixa de dados auxiliares do IBGE para o recorte RS por municipio.
+"""Baixa populacao (Censo 2022) e mesorregiao de cada municipio do RS.
 
-Duas fontes, ambas publicas e sem chave (host servicodados.ibge.gov.br):
-  1. API de Localidades  -> municipio -> mesorregiao / regiao intermediaria
-  2. API v3 de Agregados -> populacao residente por municipio (Censo 2022)
-     (o SIDRA classico esta atras de Cloudflare e bloqueia script; a API v3
-      serve o mesmo dado sem esse bloqueio.)
+Usa a API v3 de Agregados em vez do SIDRA classico, que bloqueia script.
+Saida: data/processed/municipios_rs.csv.
 
-Saida: data/processed/municipios_rs.csv, com uma linha por municipio do RS,
-pronta para o join com as ocorrencias da SSP-RS pela coluna `municipio_norm`
-(mesma normalizacao de `limpeza.normalizar_texto`).
-
-Uso:
     python src/ibge.py
 """
 

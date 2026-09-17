@@ -6,15 +6,6 @@
 %
 % Tema 6 - Criminalidade urbana por regiao
 % Recorte: Rio Grande do Sul, por MUNICIPIO (agrupado em mesorregioes do IBGE)
-%
-% ATENCAO: o enunciado sugere o "Springer Nature LaTeX Template" (Overleaf).
-% Este arquivo cobre a MESMA estrutura no estilo do nextmedia.tex. Se o template
-% Springer for obrigatorio, o texto abaixo migra sem alteracao - so troca o
-% preambulo. Confirmar com o professor.
-%
-% PENDENCIAS ANTES DA ENTREGA:
-%  - preencher o RA do Davi na capa (esta 000000000)
-%  - revisar o texto e conferir os numeros contra a ultima execucao do notebook
 % ============================================================================
 
 \usepackage[T1]{fontenc}
@@ -41,7 +32,7 @@
 \setlength{\parskip}{0pt}
 \graphicspath{{../figuras/}{figuras/}}
 
-% ============================================================================
+\input{tabelas_geradas}
 \title{\textbf{Onde e quando patrulhar?}\\[2mm]
 \large Padrões espaciais e temporais da criminalidade no Rio Grande do Sul,\\
 por município e mesorregião\\
@@ -49,7 +40,7 @@ por município e mesorregião\\
 
 \author{
 Mário Masao Mukai -- RA: 241022321\\
-Davi Ferreira de Souza -- RA: 000000000\\[2mm]
+Davi Ferreira de Souza -- RA: 241024676\\[2mm]
 \small Trabalho Final -- Ciência de Dados\\
 \small Universidade Estadual Paulista ``Júlio de Mesquita Filho'' (UNESP)\\
 \small Faculdade de Ciências -- Bauru -- Departamento de Computação
@@ -72,8 +63,8 @@ mesorregiões do IBGE, com análise exploratória, teste qui-quadrado de
 independência e teste de Kruskal-Wallis. Encontramos que o tipo de ocorrência
 depende do turno de forma estatisticamente significativa, ainda que de magnitude
 modesta (arrombamento de madrugada, furto de dia, roubo e lesão à noite), que o
-pico é a noite em todas as sete mesorregiões, e que a taxa por habitante difere
-entre regiões. Recomendamos uma escala de policiamento uniforme no pico noturno e
+turno de pico é a noite nas sete mesorregiões, seguida de perto pela tarde, e que
+a taxa por habitante difere entre regiões. Recomendamos uma escala de policiamento uniforme no pico noturno e
 diferenciada por tipo de crime e região, priorizando municípios pela taxa por
 habitante e tratando o litoral como caso sazonal, com a ressalva de que o dado
 mede ocorrência registrada e a população de referência é a residente.
@@ -91,13 +82,14 @@ estaduais distribuir um contingente policial finito por um território extenso e
 heterogêneo. No Rio Grande do Sul são 497 municípios, de capitais regionais a
 cidades de poucos milhares de habitantes, com dinâmicas de criminalidade
 distintas. Na ausência de evidência, essa distribuição tende a seguir o volume
-absoluto de ocorrências --- critério que favorece automaticamente as cidades
-grandes, onde há mais pessoas e, portanto, mais registros, sem dizer nada sobre
-o \emph{risco} enfrentado pelo cidadão nem sobre \emph{quando} o crime ocorre.
+absoluto de ocorrências, critério que favorece automaticamente as cidades
+grandes, onde há mais pessoas e, portanto, mais registros, e que nada informa
+sobre o \emph{risco} enfrentado pelo cidadão ou sobre \emph{quando} o crime
+ocorre.
 
-Padrões espaciais e temporais mudam essa conversa. Se o crime se concentra em
-certos turnos, a mesma equipe rende mais quando escalada nas horas certas. Se o
-risco por habitante difere entre regiões, a prioridade deixa de ser apenas a
+Padrões espaciais e temporais permitem outro critério. Se o crime se concentra
+em certos turnos, a mesma equipe rende mais quando escalada nas horas certas. Se
+o risco por habitante difere entre regiões, a prioridade deixa de ser apenas a
 capital. Este trabalho investiga esses padrões a partir de dados públicos e
 abertos, com o objetivo de subsidiar uma decisão de alocação.
 
@@ -110,8 +102,8 @@ estadual: \emph{no Rio Grande do Sul, os tipos de ocorrência têm padrão espac
 (por município e mesorregião) e temporal (dia da semana, horário) identificável,
 a ponto de justificar a priorização de recursos por região e turno?}
 
-A escolha de analisar o estado inteiro por município --- em vez de uma única
-cidade por bairro --- decorre de três razões: a fonte é estadual e cobre todos os
+A escolha de analisar o estado inteiro por município, em vez de uma única
+cidade por bairro, decorre de três razões: a fonte é estadual e cobre todos os
 municípios; a agregação municipal permite normalizar por população e comparar
 regiões de forma justa; e a decisão relevante para a SSP-RS é entre municípios e
 regiões, não entre bairros de uma só cidade. A resposta não termina em
@@ -124,12 +116,12 @@ regiões, não entre bairros de uma só cidade. A resposta não termina em
 \subsection{Fontes dos dados}
 Foram usadas duas fontes públicas:
 \begin{itemize}[nosep]
-  \item \textbf{SSP-RS} --- Secretaria da Segurança Pública do Rio Grande do Sul,
+  \item \textbf{SSP-RS}, Secretaria da Segurança Pública do Rio Grande do Sul:
   microdados de ocorrências criminais (\url{https://ssp.rs.gov.br}), anos
   2022--2025, todo o estado, com granularidade de ocorrência individual. Colunas
   utilizadas: data, hora, grupo, tipo de enquadramento, município, local e
   quantidade de vítimas. Acesso em 16/09/2026.
-  \item \textbf{IBGE} --- população residente por município (Censo 2022, via API
+  \item \textbf{IBGE}: população residente por município (Censo 2022, via API
   de Agregados) e a correspondência município\,$\rightarrow$\,mesorregião (API de
   Localidades), em \url{https://servicodados.ibge.gov.br}. Acesso em 16/09/2026.
 \end{itemize}
@@ -138,22 +130,52 @@ Os dados são agregados e não contêm informação pessoal identificável.
 \subsection{Limpeza e preparação}
 O pipeline (\texttt{src/carga.py}, \texttt{src/ibge.py}, \texttt{src/limpeza.py})
 executa: (1) remoção de duplicatas pela chave (Sequência, Enquadramento, Data);
-(2) derivação de atributos temporais --- ano, mês, dia da semana, indicador de
-fim de semana e turno (madrugada, manhã, tarde, noite); (3) normalização do nome
+(2) derivação de atributos temporais (ano, mês, dia da semana, indicador de fim
+de semana e turno: madrugada, manhã, tarde, noite); (3) normalização do nome
 do município e \emph{join} com a tabela do IBGE, com um pequeno dicionário de
 correção para as poucas grafias divergentes (por exemplo, Sant'Ana do Livramento
 e Doutor Maurício Cardoso), atingindo cobertura integral dos registros; e (4)
 agrupamento dos tipos de enquadramento em macrocategorias (por exemplo,
 \texttt{ROUBO\_RUA}, \texttt{FURTO\_OUTROS}, \texttt{LESAO}, \texttt{DROGAS}) e a
-marcação de ``crimes de rua'' --- categorias sensíveis a patrulhamento ostensivo,
-por oposição a fraudes e crimes contra a honra, que são registrados na delegacia
-mas não dependem de onde está a viatura. Partindo de 3,1 milhões de registros,
-praticamente todos foram retidos (as ocorrências têm data e hora completas).
+marcação de ``crimes de rua'': as categorias sensíveis a patrulhamento
+ostensivo, por oposição a fraudes e crimes contra a honra, que são registrados na
+delegacia mas não dependem de onde está a viatura. Os 314 tipos de enquadramento
+foram reduzidos a 18 macrocategorias, das quais 9 compõem os crimes de rua,
+33,4\% do total. Restaram 3.117.592 ocorrências ao fim da limpeza; a perda é
+desprezível, porque os registros têm data e hora completas.
+
+A Tabela~\ref{tab:macro} mostra o resultado dessa classificação. Duas
+observações sobre ela. A primeira é que as três maiores categorias
+(\texttt{AMEACA\_VD}, \texttt{FRAUDE} e \texttt{OUTROS}, juntas 47,8\% dos
+registros) ficam \emph{fora} do recorte de crimes de rua, o que confirma a
+necessidade do filtro: analisar o horário do estelionato ou da ameaça registrada
+na delegacia diria pouco sobre onde posicionar a viatura. A segunda é que a
+categoria \texttt{OUTROS} absorve 156 dos 314 tipos de enquadramento, mas apenas
+13,0\% dos registros: metade do vocabulário da SSP-RS é cauda longa de baixa
+frequência, e nenhum desses tipos isolados chega a 1\% do total.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Macrocategorias, em ordem de frequência. O marcador $\bullet$ indica as
+9 categorias classificadas como ``crime de rua'', sensíveis a patrulhamento
+ostensivo, que somam 33,4\% dos registros.}
+\label{tab:macro}
+\begin{tabular}{l c r r r l}
+\toprule
+Macrocategoria & Rua & Tipos & Registros & \% & Enquadramento mais frequente \\
+\midrule
+\linhasmacro
+\midrule
+\textbf{Total} & & \textbf{314} & \textbf{3.117.592} & \textbf{100,0} & \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Taxa por habitante}
 A contagem bruta não é comparável entre municípios: o maior sempre lidera. Por
 isso a comparação espacial usa a \textbf{taxa média anual por 100 mil
-habitantes} --- as ocorrências do período divididas pela população (Censo 2022) e
+habitantes}: as ocorrências do período divididas pela população (Censo 2022) e
 pelo número de anos do recorte, multiplicadas por 100\,000. A divisão pelo número
 de anos mantém o numerador (somado sobre vários anos) na mesma escala do
 denominador (população de um ano).
@@ -167,6 +189,80 @@ $\chi^2$, graus de liberdade, $p$-valor, o $V$ de Cramér (tamanho do efeito) e 
 resíduos padronizados. O \textbf{teste de Kruskal-Wallis}, não-paramétrico,
 verifica se a taxa por 100 mil habitantes dos municípios difere entre as
 mesorregiões sem supor normalidade.
+
+\subsection{Validação das premissas dos testes}\label{sec:premissas}
+A escolha dos dois testes não é arbitrária, e as premissas foram verificadas
+antes de aplicá-los.
+
+Para o \textbf{qui-quadrado}, a condição de validade é que as frequências
+esperadas sejam suficientemente grandes; a regra usual pede pelo menos 5 em cada
+célula. Aqui a tabela macrocategoria~$\times$~turno tem 9 linhas e 4 colunas
+sobre 1.041.007 ocorrências de crime de rua, e a menor frequência esperada fica
+na ordem de centenas, muito acima do limite. O teste $G$ (razão de
+verossimilhanças) seria uma alternativa equivalente e converge para o mesmo
+resultado nesse regime de amostra; ficamos com o $\chi^2$ por ser o mais
+difundido e por permitir a leitura direta dos resíduos padronizados, que é o que
+de fato interpretamos.
+
+Para a comparação da taxa entre mesorregiões, a escolha natural seria a ANOVA,
+que porém exige normalidade dentro de cada grupo e variâncias homogêneas. As duas
+premissas falham. O teste de Shapiro-Wilk rejeita a normalidade do conjunto das
+497 taxas municipais ($W = 0{,}956$, $p \approx 4{,}9\times10^{-11}$), e a
+distribuição é assimétrica à direita (assimetria $0{,}88$, curtose em excesso
+$1{,}25$), como esperado de uma variável limitada em zero e com cauda longa de
+municípios pequenos. Dentro dos grupos o quadro se repete: a normalidade é
+rejeitada em 4 das 7 mesorregiões (Tabela~\ref{tab:meso}), justamente as de maior
+número de municípios. O teste de Levene também rejeita a homogeneidade das
+variâncias ($W = 3{,}28$, $p = 0{,}004$). Com as duas premissas violadas, o
+Kruskal-Wallis, que compara distribuições por postos e não supõe nem normalidade
+nem variâncias iguais, é a opção correta.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Mesorregiões do Rio Grande do Sul. A taxa ponderada divide as
+ocorrências da região pela sua população total; a mediana municipal trata cada
+município como uma observação. As duas últimas colunas são a assimetria das taxas
+municipais e o $p$-valor do teste de Shapiro-Wilk dentro da região.}
+\label{tab:meso}
+\begin{tabular}{l r r r r r r}
+\toprule
+ & & & \multicolumn{2}{c}{Taxa/100 mil hab.} & & \\
+\cmidrule(lr){4-5}
+Mesorregião & Mun. & População & Ponderada & Mediana & Assim. & $p$ (S-W) \\
+\midrule
+\linhasmeso
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Alternativas consideradas}\label{sec:alternativas}
+Três caminhos foram avaliados e descartados, por razões que vale registrar.
+
+O primeiro foi a análise \textbf{por bairro}, que é o recorte sugerido no
+enunciado do tema. Chegamos a processar o campo de bairro dos microdados e a
+construir uma rotina de fusão de grafias por similaridade, cuja auditoria ficou
+em \texttt{data/processed/auditoria\_fusao\_bairros.csv}: ela mostra casos como
+\textsc{Jardom Botanico}~$\rightarrow$~\textsc{Jardim Botanico} e
+\textsc{S Geraldo}~$\rightarrow$~\textsc{Sao Geraldo}. O problema é que o campo é
+de preenchimento livre, sem padronização entre delegacias, e não existe
+população por bairro no Censo que permita calcular taxa. Sem denominador, a
+análise por bairro só produziria contagem bruta, que é exatamente o critério que
+este trabalho questiona. Por isso o recorte subiu para o município.
+
+O segundo foi uma \textbf{regressão de Poisson} da contagem de ocorrências por
+município, com a população como \emph{offset}. Ela permitiria estimar o efeito de
+covariáveis sobre a taxa, mas exigiria covariáveis municipais (renda, densidade,
+estrutura etária) que estão fora do recorte de dados declarado, e responderia a
+uma pergunta de \emph{explicação} que o Tema~6 não faz. A pergunta é se o padrão
+existe e é acionável, não quais fatores o causam.
+
+O terceiro foi o \textbf{agrupamento} (\emph{clustering}) dos municípios pelo
+perfil horário, para descobrir tipologias de criminalidade. É atraente, mas
+produziria grupos sem rótulo externo que os valide, e a decisão da SSP-RS já é
+tomada sobre unidades administrativas existentes: as mesorregiões, que têm
+comando regional. Um agrupamento estatístico que cortasse as mesorregiões ao meio
+seria interessante e inútil para a alocação.
 
 % ============================================================================
 \section{Resultados}\label{sec:resultados}
@@ -204,11 +300,12 @@ e não apenas mais efetivo no horário de pico geral.
 
 \subsection{Onde a taxa é maior}
 Convertidas em taxa por habitante, as 15 maiores taxas municipais
-(Figura~\ref{fig:municipios}) são dominadas por municípios litorâneos de pequeno
-porte --- um artefato que discutimos adiante. Ao restringir a municípios com 50
-mil habitantes ou mais (Figura~\ref{fig:grandes}), o quadro se equilibra:
-aparecem cidades do interior como Vacaria e Cruz Alta ao lado de Porto Alegre,
-mostrando que taxa elevada não é exclusividade do litoral nem da capital.
+(Figura~\ref{fig:municipios}) trazem oito municípios litorâneos, todos de pequeno
+porte, e cidades de poucos milhares de habitantes como Esmeralda e Miraguaí.
+Ambos os casos são artefatos que discutimos adiante. Ao restringir a municípios
+com 50 mil habitantes ou mais (Figura~\ref{fig:grandes}), aparecem cidades do
+interior como Vacaria e Cruz Alta ao lado de Porto Alegre: taxa elevada não é
+exclusividade do litoral nem da capital.
 
 \begin{figure}[htbp]
     \centering
@@ -230,9 +327,24 @@ mostrando que taxa elevada não é exclusividade do litoral nem da capital.
 Agregada por mesorregião e ponderada pela população
 (Figura~\ref{fig:mesorregiao}), a taxa varia da região Metropolitana de Porto
 Alegre (cerca de 8.000 ocorrências/ano por 100 mil hab.) ao Centro Oriental
-(cerca de 5.900), uma diferença próxima de um terço. O teste de Kruskal-Wallis
-(Seção~\ref{sec:testes}) confirma que essa diferença entre regiões é
-estatisticamente significativa.
+(cerca de 5.900), uma diferença próxima de um terço.
+
+Vale distinguir essa leitura da que o teste de Kruskal-Wallis faz, porque as duas
+não medem a mesma coisa e a Tabela~\ref{tab:meso} mostra que elas discordam. A
+taxa ponderada trata a região como uma unidade e é dominada pelos seus municípios
+grandes: por ela, a Metropolitana lidera com folga, puxada por Porto Alegre e
+pela conurbação. A mediana municipal trata cada município como uma observação, e
+por ela a Metropolitana cai para terceira (5.760), atrás do Sudoeste (6.278) e do
+Centro Ocidental (6.033). A explicação é que a Metropolitana reúne 98 municípios
+muito desiguais, dos balneários do litoral norte a cidades-dormitório de taxa
+baixa, e a mediana ignora o peso populacional que a ponderação captura.
+
+As duas respostas são corretas para perguntas diferentes. Para dimensionar o
+efetivo de uma região inteira, que é a decisão orçamentária, importa a taxa
+ponderada, porque o efetivo atende pessoas. Para saber se \emph{o município
+típico} de uma região enfrenta risco maior que o de outra, importa a mediana. O
+Kruskal-Wallis responde à segunda pergunta, e é dela que trata a
+Seção~\ref{sec:testes}.
 
 \begin{figure}[htbp]
     \centering
@@ -242,10 +354,10 @@ estatisticamente significativa.
     \label{fig:mesorregiao}
 \end{figure}
 
-A mesma informação no mapa (Figura~\ref{fig:mapa}) torna o padrão espacial
-imediato: a região Metropolitana de Porto Alegre e o Centro Ocidental são as mais
-intensas, e o Centro Oriental, no coração do estado, a menos. A malha geográfica
-foi obtida da API de malhas do IBGE.
+O mapa (Figura~\ref{fig:mapa}) mostra a distribuição dessa taxa no território:
+a região Metropolitana de Porto Alegre e o Centro Ocidental são as mais intensas,
+e o Centro Oriental a menos. A malha geográfica foi obtida da API de malhas do
+IBGE.
 
 \begin{figure}[htbp]
     \centering
@@ -257,11 +369,14 @@ foi obtida da API de malhas do IBGE.
 
 \subsection{O pico é a noite em todo o estado}
 Cruzando espaço e tempo, a Figura~\ref{fig:turnoregiao} mostra a distribuição dos
-crimes de rua por turno \emph{dentro} de cada mesorregião. O resultado simplifica
-a decisão: a noite é o turno de maior concentração nas sete regiões, sem exceção.
-A diferença regional está na madrugada, que pesa mais no interior (cerca de 21\%
-das ocorrências no Sudoeste e no Sudeste) do que na região Metropolitana
-(cerca de 15\%).
+crimes de rua por turno \emph{dentro} de cada mesorregião. A noite é o turno de
+maior concentração nas sete regiões, o que simplifica a decisão, mas convém
+registrar a margem: ela supera a tarde por 1 ponto percentual na Metropolitana
+(31\% contra 30\%) e no Nordeste, e por 3 a 5 pontos nas demais. Noite e tarde
+formam, na prática, um bloco contínuo de maior atividade. A diferença regional
+clara está na madrugada, que pesa mais no interior (21\% das ocorrências no
+Sudoeste, no Sudeste e no Centro Ocidental) do que na região Metropolitana
+(15\%).
 
 \begin{figure}[htbp]
     \centering
@@ -272,13 +387,12 @@ das ocorrências no Sudoeste e no Sudeste) do que na região Metropolitana
 \end{figure}
 
 \subsection{Sazonalidade: o efeito do veraneio}
-A liderança dos municípios litorâneos na taxa por habitante tem explicação. A
-Figura~\ref{fig:sazonalidade} contrasta a distribuição mensal das ocorrências no
+A Figura~\ref{fig:sazonalidade} contrasta a distribuição mensal das ocorrências no
 litoral e no restante do estado: enquanto o interior é praticamente plano ao
 longo do ano, o litoral salta para 12,5\% de suas ocorrências em janeiro (contra
 8,6\% no resto), com novo pico em dezembro. O padrão coincide com a temporada de
 veraneio, quando a população \emph{presente} é muito maior que a residente do
-Censo --- o que infla artificialmente a taxa anual desses municípios.
+Censo, o que infla a taxa anual desses municípios.
 
 \begin{figure}[htbp]
     \centering
@@ -293,8 +407,9 @@ O qui-quadrado entre macrocategoria e turno rejeita a independência
 ($\chi^2 = 40{.}607$, $\mathrm{gl} = 24$, $p \approx 0$): o tipo de ocorrência
 \emph{não} é independente do turno. Com 3,1 milhões de registros, porém, a
 significância é praticamente garantida; o que importa é a magnitude, e o $V$ de
-Cramér de $0{,}11$ indica uma associação real mas modesta --- o turno molda o
-\emph{tipo} de crime, sem determinar a sua ocorrência. Os resíduos padronizados
+Cramér de $0{,}11$ indica uma associação real, porém modesta: o turno molda o
+\emph{tipo} de crime, e responde por pouco da variação em \emph{se} há crime. Os
+resíduos padronizados
 (Figura~\ref{fig:residuos}) revelam o padrão: o furto por arrombamento concentra
 na madrugada, o furto comum de manhã e à tarde, e roubo e lesão à noite; as
 mesmas células mostram forte \emph{ausência} onde o crime não ocorre (o furto
@@ -302,10 +417,22 @@ comum praticamente some à noite).
 
 O qui-quadrado entre macrocategoria e mesorregião também rejeita a independência
 ($\chi^2 = 50{.}368$, $\mathrm{gl} = 48$, $p \approx 0$; $V = 0{,}09$): o perfil
-de crimes varia entre regiões, novamente com efeito modesto. Por fim, o teste de
-Kruskal-Wallis sobre a taxa por 100 mil habitantes dos municípios, agrupados por
-mesorregião, confirma diferença significativa entre as regiões
-($H = 30{,}3$, $p \approx 3{,}4\times10^{-5}$).
+de crimes varia entre regiões, novamente com efeito modesto.
+
+Por fim, o teste de Kruskal-Wallis compara a distribuição da taxa por 100 mil
+habitantes dos 497 municípios, agrupados pela mesorregião a que pertencem, com
+$H_0$ de que as sete distribuições são iguais. A hipótese é rejeitada
+($H = 30{,}3$, $\mathrm{gl} = 6$, $p \approx 3{,}4\times10^{-5}$): o município
+típico de uma região não enfrenta o mesmo risco que o de outra. O tamanho do
+efeito, porém, acompanha o que os qui-quadrados já indicavam:
+$\eta^2_H = 0{,}05$, ou seja, a mesorregião responde por cerca de 5\% da
+variação nos postos das taxas municipais. Os outros 95\% são diferenças
+\emph{dentro} de cada região, o que é coerente com a Tabela~\ref{tab:meso}: a
+dispersão interna da Metropolitana, que vai de balneário a cidade-dormitório, é
+maior que a distância entre as medianas regionais. A consequência prática é
+direta, e sustenta a recomendação da Seção~\ref{sec:conclusao}: a região é um
+critério de priorização fraco quando usada sozinha, e a taxa municipal é o
+critério que de fato discrimina.
 
 \begin{figure}[htbp]
     \centering
@@ -318,43 +445,47 @@ mesorregião, confirma diferença significativa entre as regiões
 % ============================================================================
 \section{Limitações}\label{sec:limitacoes}
 % ============================================================================
-Quatro limitações qualificam as conclusões. Primeiro, o dado mede
-\textbf{ocorrência registrada}, não crime real: a subnotificação varia por tipo
-de crime e por região, de modo que parte do padrão espacial pode refletir
-diferenças na propensão a registrar. Segundo, a \textbf{população de referência}
-é a residente do Censo 2022, e não a população presente; como mostra a
-Figura~\ref{fig:sazonalidade}, os municípios litorâneos aparecem com taxa inflada
-pela população flutuante do verão, e sua taxa anual superestima o risco do
-morador fixo. Terceiro, \textbf{municípios pequenos} têm poucos casos e, portanto,
-taxas instáveis, com grande variância. Quarto, o \textbf{recorte} é o RS em
-2022--2025; as conclusões não se estendem automaticamente a outros estados ou
-períodos.
+Quatro limitações qualificam as conclusões. Primeiro, o dado mede ocorrência
+registrada, e não crime real: a subnotificação varia por tipo de crime e por
+região, de modo que parte do padrão espacial pode refletir diferenças na
+propensão a registrar. Segundo, a população de referência é a residente do Censo
+2022, e não a população presente; como mostra a Figura~\ref{fig:sazonalidade}, os
+municípios litorâneos aparecem com taxa inflada pela população flutuante do
+verão, e sua taxa anual superestima o risco do morador fixo. Terceiro, os
+municípios pequenos têm poucos casos e, portanto, taxas instáveis: Esmeralda, com
+3.195 habitantes, ocupa a quinta posição da Figura~\ref{fig:municipios} com 1.459
+ocorrências no período, e uma variação de poucas dezenas de registros a moveria
+várias posições. Quarto, o recorte é o RS em 2022--2025, e as conclusões não se
+estendem automaticamente a outros estados ou períodos.
 
 % ============================================================================
 \section{Conclusão e recomendação}\label{sec:conclusao}
 % ============================================================================
 A criminalidade no Rio Grande do Sul não se distribui ao acaso, nem no tempo nem
-no espaço. No tempo, o tipo de ocorrência depende do turno --- de forma
-significativa, ainda que modesta em magnitude ---, com um padrão nítido:
+no espaço. No tempo, o tipo de ocorrência depende do turno de forma
+significativa, ainda que modesta em magnitude, com um padrão nítido:
 arrombamento de madrugada, furto de dia, roubo e lesão à noite. No espaço, a taxa
 por habitante difere entre as mesorregiões. E o cruzamento das duas dimensões
 simplifica a decisão: o pico é a noite em todas as regiões.
 
-\textbf{Portanto, a recomendação} para a SSP-RS é uma escala de policiamento
-\emph{uniforme quanto ao pico} --- reforço noturno em todo o estado --- e
+Portanto, a recomendação para a SSP-RS é uma escala de policiamento
+\emph{uniforme quanto ao pico}, com reforço noturno em todo o estado, e
 \emph{diferenciada quanto à composição}: patrulhamento ostensivo noturno contra
 roubo e lesão nos centros urbanos, e vigilância de madrugada contra arrombamento,
 com peso maior no interior, onde a madrugada é mais crítica. Na priorização entre
 municípios, o critério deve ser a taxa por habitante (Figura~\ref{fig:grandes}), e
-não o volume bruto.
+não o volume bruto. Essa priorização deve ser feita \emph{município a município},
+e não por região: como a mesorregião responde por apenas 5\% da variação, tratar
+uma região inteira como prioritária desperdiça efetivo nos seus municípios de taxa
+baixa e ignora municípios críticos nas regiões de taxa média.
 
-\textbf{Com a ressalva de que} o dado é de ocorrência registrada, sujeito a
+Com a ressalva de que o dado é de ocorrência registrada, sujeito a
 subnotificação desigual; de que a taxa usa a população residente, o que faz o
-litoral parecer de alto risco permanente quando na verdade seu problema é
-sazonal --- devendo ser tratado com reforço no verão, e não como prioridade o ano
-todo; e de que a associação estatística encontrada, embora real, é de magnitude
-modesta, e deve orientar a alocação sem substituir o conhecimento operacional de
-cada comando regional.
+litoral parecer de alto risco permanente quando seu problema é sazonal, a ser
+tratado com reforço no verão em vez de prioridade o ano todo; e de que a
+associação estatística encontrada, embora real, é de magnitude modesta, e deve
+orientar a alocação sem substituir o conhecimento operacional de cada comando
+regional.
 
 % ============================================================================
 % REFERENCIAS

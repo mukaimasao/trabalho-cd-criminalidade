@@ -1,19 +1,10 @@
 """Limpeza dos microdados da SSP-RS e agregacao por municipio.
 
-Recorte: estado inteiro do RS, unidade espacial = municipio (agrupado em
-mesorregiao pela tabela do IBGE, ver src/ibge.py).
+Entrada: data/raw/ssp_rs_<ano>.csv e data/processed/municipios_rs.csv.
+Saida: data/interim/ocorrencias_rs.parquet, data/processed/municipios_taxa.csv
+e data/processed/auditoria_macrocategorias.csv.
 
-Entrada:
-    data/raw/ssp_rs_<ano>.csv        (ver src/carga.py)
-    data/processed/municipios_rs.csv (ver src/ibge.py -- pop. e mesorregiao)
-Saida:
-    data/interim/ocorrencias_rs.parquet   (nivel ocorrencia, estado todo)
-    data/processed/municipios_taxa.csv     (agregado por municipio, com taxa/100k)
-    data/processed/auditoria_macrocategorias.csv
-
-Uso:
-    python src/limpeza.py
-    python src/limpeza.py --anos 2024 2025
+    python src/limpeza.py [--anos 2024 2025]
 """
 
 from __future__ import annotations
@@ -80,8 +71,7 @@ REGRAS_MACRO: list[tuple[str, str]] = [
 ]
 REGRAS_COMPILADAS = [(re.compile(p), nome) for p, nome in REGRAS_MACRO]
 
-# Categorias sensiveis a patrulhamento ostensivo. Fraude, crimes contra a honra
-# e transito sao registrados na delegacia mas nao dependem de onde esta a viatura.
+# Categorias sensiveis a patrulhamento ostensivo.
 CRIMES_DE_RUA = {
     "CVLI", "ROUBO_VEICULO", "ROUBO_RUA", "ROUBO_OUTROS",
     "FURTO_VEICULO", "FURTO_ARROMBAMENTO", "FURTO_OUTROS", "LESAO", "DROGAS",
@@ -197,13 +187,10 @@ def limpar(anos: list[int]) -> pd.DataFrame:
 
 
 def agregar_municipios(df: pd.DataFrame) -> pd.DataFrame:
-    """Uma linha por municipio: contagens e taxa MEDIA ANUAL por 100 mil hab.
+    """Uma linha por municipio, com a taxa media anual por 100 mil hab.
 
-    Contagem bruta nao e comparavel entre municipios (o maior sempre lidera);
-    a taxa por habitante e o que sustenta a priorizacao de recursos. A taxa e
-    dividida pelo numero de anos do recorte para virar media anual -- assim o
-    numerador (ocorrencias somadas de varios anos) fica na mesma escala do
-    denominador (populacao de um ano) e o valor independe de quantos anos entram.
+    Divide pelo numero de anos para o numerador ficar na mesma escala do
+    denominador, que e a populacao de um ano so.
     """
     n_anos = df["ano"].nunique()
     casados = df[df["cod_municipio"].notna()]
