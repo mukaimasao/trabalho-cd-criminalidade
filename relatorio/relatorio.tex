@@ -128,7 +128,9 @@ Foram usadas duas fontes públicas:
 Os dados são agregados e não contêm informação pessoal identificável.
 
 \subsection{Limpeza e preparação}
-O pipeline (\texttt{src/carga.py}, \texttt{src/ibge.py}, \texttt{src/limpeza.py})
+O pipeline (\texttt{src/carga.py}, \texttt{src/ibge.py}, \texttt{src/limpeza.py})%
+\footnote{Código, dados processados e instruções de reprodução:
+\url{https://github.com/mukaimasao/trabalho-cd-criminalidade}.}
 executa: (1) remoção de duplicatas pela chave (Sequência, Enquadramento, Data);
 (2) derivação de atributos temporais (ano, mês, dia da semana, indicador de fim
 de semana e turno: madrugada, manhã, tarde, noite); (3) normalização do nome
